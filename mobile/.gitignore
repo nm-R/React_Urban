@@ -1,0 +1,10 @@
+node_modules/
+.expo/
+dist/
+web-build/
+.expo-shared/
+.env
+*.jks
+*.p12
+*.key
+.DS_Store

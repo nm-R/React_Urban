@@ -1,0 +1,9 @@
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.iml
+.env
+.env.local
+postgres_data/
+fotos_data/
