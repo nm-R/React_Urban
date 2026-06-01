@@ -110,7 +110,9 @@ JWT_SECRET=urbano_plus_chave_super_secreta_2026_xyz
 docker compose up --build
 ```
 
-Na primeira execução o Docker vai baixar as imagens e compilar o projeto — pode levar alguns minutos. Nas próximas vezes será muito mais rápido.
+Na primeira execução o Docker vai baixar as imagens, **compilar o backend automaticamente** (via `mvn clean package` dentro do container) e instalar as dependências do frontend — pode levar alguns minutos. Nas próximas vezes será muito mais rápido.
+
+> Você não precisa ter Java, Maven ou Node instalados na sua máquina. O Docker cuida de tudo.
 
 Quando aparecer algo como `Started UrbanoApplication` nos logs, o sistema está pronto.
 
@@ -135,17 +137,27 @@ docker compose down -v        # apaga tudo (banco zerado)
 
 Use essa opção se quiser editar o código e ver as mudanças em tempo real no navegador.
 
-**Terminal 1 — Sobe o banco de dados e a API via Docker:**
+**Terminal 1 — Banco de dados:**
+
+```bash
+# Sobe apenas o PostgreSQL em segundo plano
+docker compose up -d db
+```
+
+**Terminal 2 — Compila e roda o backend:**
 
 ```bash
 cd backend
 
-# Crie o .env (mesmo processo da Opção 1, Passo 2)
+# Crie o .env com o segredo JWT
 echo "JWT_SECRET=urbano_plus_chave_super_secreta_2026_xyz" > .env
 
-# Sobe apenas o banco + API em segundo plano
-docker compose up -d
+# Compila e sobe a API (o Docker cuida do Maven internamente)
+docker compose up --build
 ```
+
+> Na primeira execução o Docker vai baixar as imagens e compilar o projeto — pode levar alguns minutos.  
+> Quando aparecer `Started UrbanoApplication` nos logs, a API está pronta em **http://localhost:8080**.
 
 **Terminal 2 — Sobe o frontend em modo desenvolvimento:**
 
