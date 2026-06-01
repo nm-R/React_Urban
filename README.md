@@ -1,174 +1,174 @@
-# Urbano+ 🌆
+<div align="center">
 
-Sistema de reporte e acompanhamento de ocorrências urbanas. Cidadãos reportam problemas na cidade — buracos, iluminação, enchentes, segurança — com fotos e localização. Administradores moderam, aprovam ou rejeitam. Todos acompanham pelo mapa.
+<h1>Urbano+</h1>
+<p><strong>Plataforma de mobilidade urbana colaborativa</strong><br/>Reporte ocorrências na cidade. Acompanhe o transporte público. Tudo em tempo real.</p>
 
----
+[![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk&logoColor=white)](https://openjdk.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3-brightgreen?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## 📁 Estrutura do Projeto
-
-```
-app-urbano-plus/
-│
-├── docker-compose.yml               ← Sobe tudo: DB + API + Web
-│
-├── backend/                         ← API REST Spring Boot (Java)
-│   ├── Dockerfile
-│   ├── docker-compose.yml           ← Apenas backend (uso isolado)
-│   ├── pom.xml
-│   └── src/main/java/com/urbanoplus/
-│       ├── auth/                    ← Autenticação JWT e usuários
-│       │   ├── config/SecurityConfig.java
-│       │   ├── controller/AuthController.java
-│       │   ├── dto/                 ← LoginRequest, TokenResponse, UserRequest
-│       │   ├── exception/           ← AppException, GlobalExceptionHandler
-│       │   ├── model/               ← User, Role (CITIZEN | ADMIN)
-│       │   ├── repository/UserRepository.java
-│       │   ├── security/            ← JwtFilter, JwtUtil
-│       │   └── service/AuthService.java
-│       │
-│       ├── occurrence/              ← Ocorrências, comentários, fotos
-│       │   ├── controller/OccurrenceController.java
-│       │   ├── dto/                 ← OccurrenceRequest/Response, CommentRequest/Response, RejectRequest
-│       │   ├── model/               ← Occurrence, Comment, Photo, OccurrenceCategory, OccurrenceStatus
-│       │   ├── repository/          ← OccurrenceRepository, CommentRepository, PhotoRepository
-│       │   ├── service/OccurrenceService.java
-│       │   └── storage/StorageService.java   ← Upload de fotos em disco
-│       │
-│       └── config/WebConfig.java    ← CORS e recursos estáticos (/uploads)
-│
-├── web/                             ← Frontend React Web (novo)
-│   ├── Dockerfile                   ← Build Vite → serve via nginx
-│   ├── nginx.conf                   ← SPA fallback + proxy /api → backend
-│   ├── index.html
-│   ├── vite.config.js
-│   ├── package.json
-│   ├── .env.example
-│   └── src/
-│       ├── main.jsx                 ← Ponto de entrada React
-│       ├── App.jsx                  ← Providers raiz (Auth + Router)
-│       ├── index.css                ← Todos os estilos e design tokens
-│       │
-│       ├── services/
-│       │   └── api.js               ← Instância Axios com interceptor JWT
-│       │
-│       ├── contexts/
-│       │   └── AuthContext.jsx      ← signIn / signUp / logOut / user / signed
-│       │
-│       ├── routes/
-│       │   └── AppRouter.jsx        ← Rotas públicas, privadas e admin-only
-│       │
-│       ├── components/
-│       │   ├── Layout/index.jsx          ← Sidebar de navegação responsiva
-│       │   ├── OcorrenciaModal/index.jsx ← Detalhes, fotos e comentários
-│       │   └── CriarOcorrenciaModal/index.jsx ← Criar com categoria, raio e fotos
-│       │
-│       └── pages/
-│           ├── SignIn/index.jsx          ← Login
-│           ├── SignUp/index.jsx          ← Cadastro
-│           ├── Home/index.jsx            ← Feed das últimas ocorrências
-│           ├── Ocorrencias/index.jsx     ← Mapa Leaflet + click-to-create
-│           ├── Perfil/index.jsx          ← Perfil do usuário e seus reportes
-│           └── admin/
-│               ├── Dashboard/index.jsx              ← Painel com contadores
-│               ├── GerenciarOcorrencias/index.jsx   ← Aprovar / rejeitar
-│               └── GerenciarComentarios/index.jsx   ← Moderar comentários
-│
-└── mobile/                          ← App React Native (Expo) — original
-    ├── App.js
-    └── src/
-        ├── contexts/auth.js
-        ├── services/api.js
-        ├── pages/
-        │   ├── SignIn/ SignUp/ Home/ Ocorrencias/ Perfil/
-        │   └── admin/ Dashboard/ GerenciarOcorrencias/ GerenciarComentarios/
-        └── components/
-            ├── OcorrenciaModal/
-            └── CriarOcorrenciaModal/
-```
+</div>
 
 ---
 
-## 🔌 API Endpoints
+## Sobre o projeto
 
-| Método | Rota | Auth | Descrição |
-|--------|------|------|-----------|
-| `POST` | `/login` | ❌ | Autenticar → retorna JWT |
-| `POST` | `/users` | ❌ | Cadastrar novo usuário |
-| `GET` | `/me` | ✅ | Dados do usuário logado |
-| `GET` | `/occurrences` | ✅ | Listar aprovadas (mapa) |
-| `GET` | `/occurrences/latest` | ✅ | Últimas aprovadas (feed) |
-| `GET` | `/occurrences/my` | ✅ | Minhas ocorrências |
-| `GET` | `/occurrences/{id}` | ✅ | Detalhe de ocorrência |
-| `POST` | `/occurrences` | ✅ | Criar ocorrência (multipart) |
-| `POST` | `/occurrences/{id}/reopen` | ✅ | Reabrir ocorrência expirada |
-| `GET` | `/occurrences/{id}/comments` | ✅ | Listar comentários |
-| `POST` | `/occurrences/{id}/comments` | ✅ | Adicionar comentário |
-| `DELETE` | `/occurrences/{id}/comments/{cid}` | 🔐 ADMIN | Remover comentário |
-| `GET` | `/occurrences/admin?status=` | 🔐 ADMIN | Listar por status |
-| `PATCH` | `/occurrences/{id}/approve` | 🔐 ADMIN | Aprovar |
-| `PATCH` | `/occurrences/{id}/reject` | 🔐 ADMIN | Rejeitar com motivo |
+O **Urbano+** é uma plataforma web e mobile que conecta cidadãos e administração municipal em torno de dois problemas urbanos recorrentes: a falta de visibilidade sobre ocorrências na infraestrutura da cidade (buracos, alagamentos, iluminação, segurança) e a ausência de informações em tempo real sobre o transporte público.
+
+Cidadãos reportam problemas com foto e geolocalização diretamente pelo mapa. Administradores revisam, aprovam ou rejeitam as ocorrências no painel de moderação. Ocorrências aprovadas ficam visíveis no mapa para toda a comunidade.
+
+> Projeto Integrador V · Engenharia de Software · Unifio — Centro Universitário de Ourinhos  
+> Orientador: Prof. Thiago Henrique Pereira Paiva · 2026
 
 ---
 
-## 🚀 Como Rodar
+## Funcionalidades
 
-### Pré-requisitos
-
-- [Docker](https://docs.docker.com/get-docker/) e Docker Compose
-- Git
+| Cidadão | Administrador |
+|---|---|
+| Criar conta e fazer login | Aprovar ou rejeitar ocorrências (com motivo) |
+| Reportar ocorrência com foto, categoria e raio | Moderar e remover comentários |
+| Visualizar e filtrar ocorrências no mapa interativo | Bloquear usuários |
+| Comentar em ocorrências existentes | Gerenciar rotas e horários de ônibus |
+| Reabrir ocorrências expiradas | Painel com contadores por status |
+| Acompanhar ônibus em tempo real | — |
 
 ---
 
-### ▶️ Opção 1 — Tudo com Docker (recomendado)
+## Stack
 
-Sobe banco, API e frontend web com um único comando.
+| Camada | Tecnologias |
+|---|---|
+| **Backend** | Java 21 · Spring Boot 3 · Spring Security · JWT · Spring Data JPA |
+| **Banco de dados** | PostgreSQL 16 |
+| **Frontend Web** | React 18 · Vite · React Router v6 · React Leaflet · Axios · Lucide React |
+| **Mobile** | React Native · Expo · Axios · AsyncStorage · React Native Maps |
+| **Infraestrutura** | Docker · Docker Compose · nginx (proxy reverso + SPA fallback) |
+
+---
+
+## Pré-requisitos
+
+Antes de tudo, certifique-se de ter instalado:
+
+- [Git](https://git-scm.com/downloads)
+- [Docker Desktop](https://docs.docker.com/get-docker/) — já inclui o Docker Compose
+
+> Para a **Opção 2** (desenvolvimento local com hot-reload), você também precisará do [Node.js 20+](https://nodejs.org/).
+
+Não sabe se já tem? Rode no terminal:
 
 ```bash
-# 1. Clone o repositório
-git clone https://github.com/KristianKirschner/app-urbano-plus.git
-cd app-urbano-plus
+git --version
+docker --version
+docker compose version
+```
 
-# 2. Configure o backend
-echo "JWT_SECRET=troque_por_uma_chave_secreta_de_32_chars" > backend/.env
+---
 
-# 3. Suba tudo
+## Rodando o projeto
+
+### Opção 1 — Docker (recomendado) ✅
+
+Essa opção sobe **tudo de uma vez**: banco de dados, API e frontend. Não precisa instalar Java, Node ou configurar nada além do Docker.
+
+**Passo 1 — Clone o repositório**
+
+```bash
+git clone https://github.com/nm-R/React_Urban.git
+cd React_Urban
+```
+
+**Passo 2 — Crie o arquivo de configuração do backend**
+
+O backend precisa de um segredo para assinar os tokens de autenticação (JWT). Você precisa criar um arquivo `.env` dentro da pasta `backend/` com esse valor.
+
+No terminal, dentro da pasta raiz do projeto, rode:
+
+```bash
+# Linux / macOS
+echo "JWT_SECRET=urbano_plus_chave_super_secreta_2026_xyz" > backend/.env
+
+# Windows (PowerShell)
+"JWT_SECRET=urbano_plus_chave_super_secreta_2026_xyz" | Out-File -FilePath backend\.env -Encoding utf8
+```
+
+> O valor do `JWT_SECRET` pode ser qualquer texto longo (mínimo 32 caracteres). Em produção, use uma string aleatória gerada por um gerador de senhas.
+
+Se preferir criar manualmente: crie um arquivo chamado `.env` dentro da pasta `backend/` com o seguinte conteúdo:
+
+```
+JWT_SECRET=urbano_plus_chave_super_secreta_2026_xyz
+```
+
+**Passo 3 — Suba os serviços**
+
+```bash
 docker compose up --build
 ```
 
-| Serviço | URL |
-|---------|-----|
-| **Frontend Web** | http://localhost:3000 |
-| **API REST** | http://localhost:8080 |
+Na primeira execução o Docker vai baixar as imagens e compilar o projeto — pode levar alguns minutos. Nas próximas vezes será muito mais rápido.
 
-Para parar:
+Quando aparecer algo como `Started UrbanoApplication` nos logs, o sistema está pronto.
+
+**Passo 4 — Acesse no navegador**
+
+| Serviço | URL |
+|---|---|
+| 🌐 Frontend Web | http://localhost:3000 |
+| ⚙️ API REST | http://localhost:8080 |
+
+**Para parar:**
+
 ```bash
-docker compose down          # mantém os dados
-docker compose down -v       # apaga volumes (banco zerado)
+# Ctrl+C no terminal, depois:
+docker compose down           # mantém os dados salvos
+docker compose down -v        # apaga tudo (banco zerado)
 ```
 
 ---
 
-### ▶️ Opção 2 — Desenvolvimento local (hot-reload)
+### Opção 2 — Desenvolvimento local (hot-reload)
 
-**Terminal 1 — Backend + Banco:**
+Use essa opção se quiser editar o código e ver as mudanças em tempo real no navegador.
+
+**Terminal 1 — Sobe o banco de dados e a API via Docker:**
+
 ```bash
 cd backend
-echo "JWT_SECRET=troque_por_uma_chave_secreta_de_32_chars" > .env
+
+# Crie o .env (mesmo processo da Opção 1, Passo 2)
+echo "JWT_SECRET=urbano_plus_chave_super_secreta_2026_xyz" > .env
+
+# Sobe apenas o banco + API em segundo plano
 docker compose up -d
 ```
 
-**Terminal 2 — Frontend Web:**
+**Terminal 2 — Sobe o frontend em modo desenvolvimento:**
+
 ```bash
 cd web
-cp .env.example .env         # VITE_API_URL=http://localhost:8080
+
+# Cria o arquivo de configuração do frontend
+cp .env.example .env
+# O arquivo .env criado já vem com VITE_API_URL=http://localhost:8080
+# Não precisa alterar nada.
+
+# Instala as dependências
 npm install
+
+# Inicia o servidor de desenvolvimento
 npm run dev
-# Acesse → http://localhost:5173
 ```
+
+Acesse **http://localhost:5173** — qualquer alteração nos arquivos da pasta `web/src/` reflete automaticamente no navegador.
 
 ---
 
-### ▶️ Opção 3 — App Mobile (original)
+### Opção 3 — App Mobile (Expo)
 
 ```bash
 cd mobile
@@ -176,95 +176,135 @@ npm install
 npx expo start
 ```
 
-> Edite `mobile/src/services/api.js` e coloque o IP local da sua máquina como `baseURL` (ex: `http://192.168.1.10:8080`).
+Escaneie o QR code com o app **Expo Go** no seu celular, ou pressione `a` para abrir no emulador Android / `i` para iOS.
+
+> **Importante:** abra o arquivo `mobile/src/services/api.js` e altere o `baseURL` para o IP da sua máquina na rede local (ex: `http://192.168.1.10:8080`). O emulador e o celular físico não conseguem acessar `localhost` da sua máquina diretamente.
+
+Para descobrir seu IP local:
+```bash
+# Linux / macOS
+ip route get 1 | awk '{print $7; exit}'   # ou: ifconfig | grep "inet "
+
+# Windows
+ipconfig | findstr "IPv4"
+```
 
 ---
 
-## ⚙️ Variáveis de Ambiente
+## API Reference
 
-### `backend/.env`
-```env
-JWT_SECRET=sua_chave_secreta_aqui_minimo_32_caracteres
-```
-
-### `web/.env` (apenas desenvolvimento local)
-```env
-VITE_API_URL=http://localhost:8080
-```
-
-> Em produção Docker, o nginx faz o proxy internamente usando o service name `app` — nenhuma variável é necessária.
+| Método | Rota | Auth | Descrição |
+|---|---|---|---|
+| `POST` | `/login` | — | Autenticar → retorna JWT |
+| `POST` | `/users` | — | Cadastrar novo usuário |
+| `GET` | `/me` | ✅ JWT | Dados do usuário logado |
+| `GET` | `/occurrences` | ✅ JWT | Listar ocorrências aprovadas (mapa) |
+| `GET` | `/occurrences/latest` | ✅ JWT | Últimas aprovadas (feed home) |
+| `GET` | `/occurrences/my` | ✅ JWT | Ocorrências do usuário autenticado |
+| `GET` | `/occurrences/{id}` | ✅ JWT | Detalhe de uma ocorrência |
+| `POST` | `/occurrences` | ✅ JWT | Criar ocorrência (`multipart/form-data`) |
+| `POST` | `/occurrences/{id}/reopen` | ✅ JWT | Reabrir ocorrência expirada |
+| `GET` | `/occurrences/{id}/comments` | ✅ JWT | Listar comentários |
+| `POST` | `/occurrences/{id}/comments` | ✅ JWT | Adicionar comentário |
+| `DELETE` | `/occurrences/{id}/comments/{cid}` | 🔐 ADMIN | Remover comentário |
+| `GET` | `/occurrences/admin?status=` | 🔐 ADMIN | Listar por status (moderação) |
+| `PATCH` | `/occurrences/{id}/approve` | 🔐 ADMIN | Aprovar ocorrência |
+| `PATCH` | `/occurrences/{id}/reject` | 🔐 ADMIN | Rejeitar com motivo |
 
 ---
 
-## 🗂️ Categorias de Ocorrência
+## Categorias e status
+
+**Categorias de ocorrência**
 
 | Chave | Label | Cor |
-|-------|-------|-----|
+|---|---|---|
 | `TRAFFIC` | Trânsito | 🟡 Amarelo |
 | `INFRASTRUCTURE` | Infraestrutura | 🔴 Vermelho |
 | `SANITATION` | Saneamento | 🟢 Verde |
 | `SECURITY` | Segurança | 🔵 Azul |
-| `ENVIRONMENT` | Meio ambiente | 🟢 Verde claro |
+| `ENVIRONMENT` | Meio ambiente | 🟩 Verde claro |
 | `OTHER` | Outros | ⚫ Cinza |
 
-## 📊 Status de Ocorrência
+**Ciclo de vida da ocorrência**
+
+```
+PENDING → APPROVED → EXPIRED → PENDING (reaberta pelo criador)
+        ↘ REJECTED
+```
 
 | Status | Descrição |
-|--------|-----------|
-| `PENDING` | Aguardando revisão admin |
-| `APPROVED` | Visível no mapa e feed |
-| `REJECTED` | Rejeitada com motivo |
-| `EXPIRED` | Pode ser reaberta pelo usuário |
+|---|---|
+| `PENDING` | Aguardando revisão do administrador |
+| `APPROVED` | Visível no mapa e no feed (expira em 24h) |
+| `REJECTED` | Rejeitada com motivo registrado |
+| `EXPIRED` | Prazo encerrado; pode ser reaberta |
 
 ---
 
-## 🛠️ Stack Tecnológica
+## Estrutura do repositório
 
-### Backend
-- Java 21 + Spring Boot 3
-- Spring Security + JWT (roles: `CITIZEN`, `ADMIN`)
-- Spring Data JPA + PostgreSQL 16
-- Docker + Docker Compose
-
-### Frontend Web
-- React 18 + Vite
-- React Router DOM v6
-- Axios (interceptor JWT automático)
-- React Leaflet + Leaflet.js (mapa interativo)
-- Lucide React (ícones)
-- nginx (serve o build + proxy reverso)
-
-### Mobile (original)
-- React Native + Expo
-- Axios + AsyncStorage
-- React Native Maps
+```
+React_Urban/
+├── docker-compose.yml          # Orquestra DB + API + Web
+│
+├── backend/                    # API REST — Spring Boot
+│   ├── Dockerfile
+│   ├── .env.example            # Copie para .env e preencha
+│   ├── pom.xml
+│   └── src/main/java/com/urbanoplus/
+│       ├── auth/               # JWT, usuários, roles
+│       ├── occurrence/         # Ocorrências, comentários, fotos
+│       └── config/             # CORS, recursos estáticos
+│
+├── web/                        # SPA — React + Vite
+│   ├── Dockerfile              # Build → nginx
+│   ├── nginx.conf              # SPA fallback + proxy /api
+│   ├── .env.example
+│   └── src/
+│       ├── contexts/           # AuthContext (JWT)
+│       ├── routes/             # AppRouter (público/privado/admin)
+│       ├── components/         # Layout, modais, UI atoms
+│       └── pages/              # SignIn, SignUp, Home, Ocorrencias, Perfil, admin/
+│
+└── mobile/                     # App — React Native + Expo
+    └── src/
+        ├── contexts/           # auth.js
+        ├── services/           # api.js (Axios + AsyncStorage)
+        ├── components/         # Modais reutilizáveis
+        └── pages/              # Espelha as páginas da versão web
+```
 
 ---
 
-## 🔐 Promover usuário a Admin
+## Promover usuário a administrador
 
-```sql
+```bash
+# Conectar ao banco
+docker exec -it urbanodb psql -U postgres -d urbano
+
+# Executar dentro do psql
 UPDATE users SET role = 'ADMIN' WHERE email = 'seu@email.com';
 ```
 
-Execute no banco via:
-```bash
-docker exec -it urbanodb psql -U postgres -d urbano
-```
-
 ---
 
-## 📦 Volumes Docker
+## Volumes Docker
 
 | Volume | Conteúdo |
-|--------|----------|
+|---|---|
 | `postgres_data` | Banco de dados PostgreSQL |
-| `fotos_data` | Fotos das ocorrências enviadas |
+| `fotos_data` | Imagens enviadas nas ocorrências |
 
 ---
 
-## 👥 Equipe
+## Licença
 
-Projeto Integrador V — Engenharia de Software
-Centro Universitário de Ourinhos (Unifio)
-Professor: Thiago | Ano: 2024
+Distribuído sob a licença MIT. Consulte o arquivo [LICENSE](LICENSE) para mais informações.
+
+---
+
+## Equipe
+
+Desenvolvido por **Kristian Kirschner Pinto**, **Luis Gustavo Magosso Obreli** e **Rogério Vieira Manzano**  
+como parte do Projeto Integrador V do curso de Engenharia de Software da **Unifio — Centro Universitário de Ourinhos**.
